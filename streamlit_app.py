@@ -4,6 +4,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from supabase import create_client
+
 st.set_page_config(page_title="高校受験トレーニング", page_icon="📘", layout="centered")
 
 # SupabaseのSecrets確認
@@ -14,6 +16,29 @@ if (
     st.success("Supabaseの接続情報を読み込めました。")
 else:
     st.error("Supabaseの接続情報が見つかりません。")
+
+
+# Supabaseへの接続確認
+try:
+    supabase = create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_KEY"],
+    )
+
+    response = (
+        supabase
+        .table("study_results")
+        .select("id")
+        .limit(1)
+        .execute()
+    )
+
+    st.success("Supabaseデータベースへ接続できました。")
+
+except Exception as error:
+    st.error("Supabaseデータベースへ接続できませんでした。")
+    st.code(str(error))
+
     
 QUESTIONS_PER_SESSION = 10
 questions_file = Path(__file__).parent / "questions.json"
