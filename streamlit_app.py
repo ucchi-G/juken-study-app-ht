@@ -1,10 +1,11 @@
 import json
 import random
+from supabase import create_client
 from pathlib import Path
 
 import streamlit as st
 
-from supabase import create_client
+
 
 st.set_page_config(page_title="高校受験トレーニング", page_icon="📘", layout="centered")
 
@@ -39,7 +40,7 @@ except Exception as error:
     st.error("Supabaseデータベースへ接続できませんでした。")
     st.code(str(error))
 
-    
+
 QUESTIONS_PER_SESSION = 10
 questions_file = Path(__file__).parent / "questions.json"
 with questions_file.open("r", encoding="utf-8") as file:
