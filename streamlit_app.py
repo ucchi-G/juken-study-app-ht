@@ -204,7 +204,7 @@ def calculate_statistics(results):
 # 成績表示
 # --------------------------------
 def display_statistics():
-    """本日・累計・分野別の成績を表示する。"""
+    """本日・累計・分野別の成績をコンパクトに表示する。"""
 
     results, error = fetch_study_results()
 
@@ -214,81 +214,38 @@ def display_statistics():
 
     statistics = calculate_statistics(results)
 
-    st.markdown("#### 📊 学習成績")
+    # 初期状態では閉じておく
+    with st.expander("📊 学習成績を見る", expanded=False):
+        st.markdown(
+            f"""
+            **本日：**
+            {statistics['today_correct']} / 
+            {statistics['today_total']}問正解
+            （{statistics['today_rate']:.0f}%）
 
-    today_column, all_column = st.columns(2)
-
-    with today_column:
-        st.markdown("##### 本日")
-
-        st.metric(
-            "正解数",
-            (
-                f"{statistics['today_correct']} / "
-                f"{statistics['today_total']}問"
-            ),
+            **これまで：**
+            {statistics['all_correct']} / 
+            {statistics['all_total']}問正解
+            （{statistics['all_rate']:.0f}%）
+            """
         )
 
-        st.metric(
-            "正答率",
-            f"{statistics['today_rate']:.0f}%",
-        )
+        st.markdown("##### 分野別")
 
-    with all_column:
-        st.markdown("##### これまで")
+        for category in categories:
+            category_data = statistics["categories"][category]
 
-        st.metric(
-            "正解数",
-            (
-                f"{statistics['all_correct']} / "
-                f"{statistics['all_total']}問"
-            ),
-        )
+            icon = {
+                "地理": "🌏",
+                "歴史": "🏯",
+                "公民": "⚖️",
+            }[category]
 
-        st.metric(
-            "正答率",
-            f"{statistics['all_rate']:.0f}%",
-        )
-
-    st.divider()
-
-    st.markdown("##### 分野別の累計成績")
-
-    geography_column, history_column, civics_column = (
-        st.columns(3)
-    )
-
-    category_columns = {
-        "地理": geography_column,
-        "歴史": history_column,
-        "公民": civics_column,
-    }
-
-    category_icons = {
-        "地理": "🌏",
-        "歴史": "🏯",
-        "公民": "⚖️",
-    }
-
-    for category, column in category_columns.items():
-        category_data = statistics["categories"][category]
-
-        with column:
-            st.markdown(
-                f"###### {category_icons[category]} {category}"
-            )
-
-            st.metric(
-                "正解数",
-                (
-                    f"{category_data['correct']} / "
-                    f"{category_data['total']}問"
-                ),
-            )
-
-            st.metric(
-                "正答率",
-                f"{category_data['rate']:.0f}%",
+            st.write(
+                f"{icon} **{category}：**"
+                f"{category_data['correct']} / "
+                f"{category_data['total']}問正解"
+                f"（{category_data['rate']:.0f}%）"
             )
 
 
@@ -364,10 +321,6 @@ st.subheader("📘 高校受験トレーニング")
 # 分野選択画面
 # --------------------------------
 if not st.session_state.get("quiz_started", False):
-    display_statistics()
-
-    st.divider()
-
     st.write(
         "挑戦する分野を選んでください。"
         "各分野100問から毎回10問を出題します。"
@@ -386,6 +339,11 @@ if not st.session_state.get("quiz_started", False):
     ):
         reset_quiz(category)
         st.rerun()
+
+    st.divider()
+
+    # 成績は問題開始ボタンの下に折りたたんで表示
+    display_statistics()
 
     st.stop()
 
