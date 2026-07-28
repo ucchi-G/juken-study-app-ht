@@ -74,6 +74,15 @@ def reset_to_menu():
 
 st.title("📘 高校受験トレーニング")
 
+# ログイン中の利用者確認
+try:
+    if st.user.is_logged_in:
+        st.write(f"ログイン中：{st.user.email}")
+    else:
+        st.warning("ログイン情報を取得できませんでした。")
+except Exception:
+    st.warning("利用者情報の取得機能を確認できませんでした。")
+    
 if not st.session_state.get("quiz_started", False):
     st.write("挑戦する分野を選んでください。各分野100問から毎回10問を出題します。")
     category = st.radio("分野", categories, horizontal=True)
