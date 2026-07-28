@@ -6,6 +6,15 @@ import streamlit as st
 
 st.set_page_config(page_title="高校受験トレーニング", page_icon="📘", layout="centered")
 
+# SupabaseのSecrets確認
+if (
+    "SUPABASE_URL" in st.secrets
+    and "SUPABASE_KEY" in st.secrets
+):
+    st.success("Supabaseの接続情報を読み込めました。")
+else:
+    st.error("Supabaseの接続情報が見つかりません。")
+    
 QUESTIONS_PER_SESSION = 10
 questions_file = Path(__file__).parent / "questions.json"
 with questions_file.open("r", encoding="utf-8") as file:
