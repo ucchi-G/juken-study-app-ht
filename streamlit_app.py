@@ -115,7 +115,7 @@ def fetch_study_results():
 # 成績を集計
 # --------------------------------
 def calculate_statistics(results):
-    """本日分と累計分の正解数・正答率を計算する。"""
+    """本日・累計・分野別の成績を計算する。"""
 
     today = datetime.now(JAPAN_TIMEZONE).date()
 
@@ -124,18 +124,44 @@ def calculate_statistics(results):
     all_total = 0
     all_correct = 0
 
+    category_statistics = {
+        "地理": {
+            "total": 0,
+            "correct": 0,
+        },
+        "歴史": {
+            "total": 0,
+            "correct": 0,
+        },
+        "公民": {
+            "total": 0,
+            "correct": 0,
+        },
+    }
+
     for result in results:
         total_count = result["total_count"]
         correct_count = result["correct_count"]
+        category = result["category"]
 
+        # 累計
         all_total += total_count
         all_correct += correct_count
 
+        # 分野別
+        if category in category_statistics:
+            category_statistics[category]["total"] += total_count
+            category_statistics[category]["correct"] += correct_count
+
+        # 学習日の判定
         studied_at = datetime.fromisoformat(
             result["studied_at"].replace("Z", "+00:00")
         )
-        studied_date = studied_at.astimezone(JAPAN_TIMEZONE).date()
+        studied_date = studied_at.astimezone(
+            JAPAN_TIMEZONE
+        ).date()
 
+        # 本日分
         if studied_date == today:
             today_total += total_count
             today_correct += correct_count
@@ -152,6 +178,16 @@ def calculate_statistics(results):
         else 0
     )
 
+    for category in category_statistics:
+        category_total = category_statistics[category]["total"]
+        category_correct = category_statistics[category]["correct"]
+
+        category_statistics[category]["rate"] = (
+            category_correct / category_total * 100
+            if category_total > 0
+            else 0
+        )
+
     return {
         "today_total": today_total,
         "today_correct": today_correct,
@@ -159,14 +195,14 @@ def calculate_statistics(results):
         "all_total": all_total,
         "all_correct": all_correct,
         "all_rate": all_rate,
+        "categories": category_statistics,
     }
-
 
 # --------------------------------
 # 成績表示
 # --------------------------------
 def display_statistics():
-    """本日と累計の成績を表示する。"""
+    """本日・累計・分野別の成績を表示する。"""
 
     results, error = fetch_study_results()
 
@@ -182,6 +218,7 @@ def display_statistics():
 
     with today_column:
         st.markdown("#### 本日")
+
         st.metric(
             "正解数",
             (
@@ -189,6 +226,7 @@ def display_statistics():
                 f"{statistics['today_total']}問"
             ),
         )
+
         st.metric(
             "正答率",
             f"{statistics['today_rate']:.0f}%",
@@ -196,6 +234,7 @@ def display_statistics():
 
     with all_column:
         st.markdown("#### これまで")
+
         st.metric(
             "正解数",
             (
@@ -203,11 +242,51 @@ def display_statistics():
                 f"{statistics['all_total']}問"
             ),
         )
+
         st.metric(
             "正答率",
             f"{statistics['all_rate']:.0f}%",
         )
 
+    st.divider()
+    st.markdown("#### 分野別の累計成績")
+
+    geography_column, history_column, civics_column = (
+        st.columns(3)
+    )
+
+    category_columns = {
+        "地理": geography_column,
+        "歴史": history_column,
+        "公民": civics_column,
+    }
+
+    category_icons = {
+        "地理": "🌏",
+        "歴史": "🏯",
+        "公民": "⚖️",
+    }
+
+    for category, column in category_columns.items():
+        category_data = statistics["categories"][category]
+
+        with column:
+            st.markdown(
+                f"##### {category_icons[category]} {category}"
+            )
+
+            st.metric(
+                "正解数",
+                (
+                    f"{category_data['correct']} / "
+                    f"{category_data['total']}問"
+                ),
+            )
+
+            st.metric(
+                "正答率",
+                f"{category_data['rate']:.0f}%",
+            )
 
 # --------------------------------
 # 新しい通常問題を開始
