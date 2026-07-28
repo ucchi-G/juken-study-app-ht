@@ -87,7 +87,7 @@ def save_study_result():
 # Supabaseから全成績を取得
 # --------------------------------
 def fetch_study_results():
-    """daughterの成績履歴をすべて取得する。"""
+    """娘用の成績履歴をすべて取得する。"""
 
     try:
         response = requests.get(
@@ -157,6 +157,7 @@ def calculate_statistics(results):
         studied_at = datetime.fromisoformat(
             result["studied_at"].replace("Z", "+00:00")
         )
+
         studied_date = studied_at.astimezone(
             JAPAN_TIMEZONE
         ).date()
@@ -198,6 +199,7 @@ def calculate_statistics(results):
         "categories": category_statistics,
     }
 
+
 # --------------------------------
 # 成績表示
 # --------------------------------
@@ -212,12 +214,12 @@ def display_statistics():
 
     statistics = calculate_statistics(results)
 
-    st.subheader("📊 学習成績")
+    st.markdown("#### 📊 学習成績")
 
     today_column, all_column = st.columns(2)
 
     with today_column:
-        st.markdown("#### 本日")
+        st.markdown("##### 本日")
 
         st.metric(
             "正解数",
@@ -233,7 +235,7 @@ def display_statistics():
         )
 
     with all_column:
-        st.markdown("#### これまで")
+        st.markdown("##### これまで")
 
         st.metric(
             "正解数",
@@ -249,7 +251,8 @@ def display_statistics():
         )
 
     st.divider()
-    st.markdown("#### 分野別の累計成績")
+
+    st.markdown("##### 分野別の累計成績")
 
     geography_column, history_column, civics_column = (
         st.columns(3)
@@ -272,7 +275,7 @@ def display_statistics():
 
         with column:
             st.markdown(
-                f"##### {category_icons[category]} {category}"
+                f"###### {category_icons[category]} {category}"
             )
 
             st.metric(
@@ -288,6 +291,7 @@ def display_statistics():
                 f"{category_data['rate']:.0f}%",
             )
 
+
 # --------------------------------
 # 新しい通常問題を開始
 # --------------------------------
@@ -298,9 +302,16 @@ def reset_quiz(category):
         if question["category"] == category
     ]
 
-    count = min(QUESTIONS_PER_SESSION, len(pool))
+    count = min(
+        QUESTIONS_PER_SESSION,
+        len(pool),
+    )
 
-    st.session_state.questions = random.sample(pool, count)
+    st.session_state.questions = random.sample(
+        pool,
+        count,
+    )
+
     st.session_state.question_index = 0
     st.session_state.score = 0
     st.session_state.answered = False
@@ -403,13 +414,15 @@ if st.session_state.question_index >= len(questions):
 
     st.success("全問題が終了しました！")
 
-    st.subheader(
-        f"結果：{len(questions)}問中 "
+    st.markdown(
+        f"#### 結果：{len(questions)}問中 "
         f"{st.session_state.score}問正解"
     )
 
     correct_rate = (
-        st.session_state.score / len(questions) * 100
+        st.session_state.score
+        / len(questions)
+        * 100
     )
 
     st.write(f"正答率：{correct_rate:.0f}%")
@@ -451,7 +464,8 @@ if st.session_state.question_index >= len(questions):
     # --------------------------------
     if st.session_state.mistakes:
         st.divider()
-        st.subheader("📝 間違えた問題")
+
+        st.markdown("#### 📝 間違えた問題")
 
         for number, mistake in enumerate(
             st.session_state.mistakes,
@@ -464,9 +478,11 @@ if st.session_state.question_index >= len(questions):
                     f"あなたの答え："
                     f"{mistake['selected_answer']}"
                 )
+
                 st.write(
                     f"正解：{mistake['answer']}"
                 )
+
                 st.info(mistake["explanation"])
 
         if st.button(
@@ -494,6 +510,7 @@ if st.session_state.question_index >= len(questions):
                 retry_questions,
                 len(retry_questions),
             )
+
             st.session_state.question_index = 0
             st.session_state.score = 0
             st.session_state.answered = False
@@ -551,7 +568,9 @@ else:
 
     st.progress(progress)
 
-    st.subheader(current_question["question"])
+    st.markdown(
+        f"#### {current_question['question']}"
+    )
 
     selected = st.radio(
         "答えを選んでください",
