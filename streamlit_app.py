@@ -1,6 +1,6 @@
 import json
 import random
-from supabase import create_client
+import requests
 from pathlib import Path
 
 import streamlit as st
@@ -20,19 +20,25 @@ else:
 
 
 # Supabaseへの接続確認
+# Supabaseへの接続確認
 try:
-    supabase = create_client(
-        st.secrets["SUPABASE_URL"],
-        st.secrets["SUPABASE_KEY"],
+    supabase_url = st.secrets["SUPABASE_URL"]
+    supabase_key = st.secrets["SUPABASE_KEY"]
+
+    response = requests.get(
+        f"{supabase_url}/rest/v1/study_results",
+        headers={
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+        },
+        params={
+            "select": "id",
+            "limit": "1",
+        },
+        timeout=10,
     )
 
-    response = (
-        supabase
-        .table("study_results")
-        .select("id")
-        .limit(1)
-        .execute()
-    )
+    response.raise_for_status()
 
     st.success("Supabaseデータベースへ接続できました。")
 
