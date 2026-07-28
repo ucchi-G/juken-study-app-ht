@@ -1,4 +1,9 @@
+import json
+import random
+from pathlib import Path
+
 import streamlit as st
+
 
 st.set_page_config(
     page_title="高校受験トレーニング",
@@ -6,29 +11,25 @@ st.set_page_config(
     layout="centered",
 )
 
-# 問題データ
-questions = [
-    {
-        "question": "日本で最も面積が大きい都道府県はどこですか？",
-        "choices": ["北海道", "岩手県", "長野県", "福島県"],
-        "answer": "北海道",
-        "explanation": "北海道は、日本の都道府県の中で最も面積が大きい地域です。",
-    },
-    {
-        "question": "日本国憲法が施行された年はいつですか？",
-        "choices": ["1945年", "1946年", "1947年", "1950年"],
-        "answer": "1947年",
-        "explanation": "日本国憲法は1946年11月3日に公布され、1947年5月3日に施行されました。",
-    },
-    {
-        "question": "日本で最も長い川はどれですか？",
-        "choices": ["利根川", "石狩川", "信濃川", "北上川"],
-        "answer": "信濃川",
-        "explanation": "信濃川は全長約367kmで、日本で最も長い川です。",
-    },
-]
 
+# -----------------------------
+# 問題データをJSONから読み込む
+# -----------------------------
+questions_file = Path(__file__).parent / "questions.json"
+
+with questions_file.open("r", encoding="utf-8") as file:
+    original_questions = json.load(file)
+
+
+# -----------------------------
 # セッション状態の初期化
+# -----------------------------
+if "questions" not in st.session_state:
+    st.session_state.questions = random.sample(
+        original_questions,
+        len(original_questions),
+    )
+
 if "question_index" not in st.session_state:
     st.session_state.question_index = 0
 
@@ -41,11 +42,20 @@ if "answered" not in st.session_state:
 if "selected_answer" not in st.session_state:
     st.session_state.selected_answer = None
 
+
+questions = st.session_state.questions
+
+
+# -----------------------------
 # タイトル
+# -----------------------------
 st.title("📘 高校受験トレーニング")
 st.write("社会の4択問題に挑戦しよう！")
 
-# 全問題終了後
+
+# -----------------------------
+# 全問題終了後の結果画面
+# -----------------------------
 if st.session_state.question_index >= len(questions):
     st.success("全問題が終了しました！")
 
@@ -66,20 +76,28 @@ if st.session_state.question_index >= len(questions):
         st.write("間違えた問題をもう一度確認してみましょう。")
 
     if st.button("もう一度挑戦する"):
+        st.session_state.questions = random.sample(
+            original_questions,
+            len(original_questions),
+        )
         st.session_state.question_index = 0
         st.session_state.score = 0
         st.session_state.answered = False
         st.session_state.selected_answer = None
         st.rerun()
 
+
+# -----------------------------
+# 問題画面
+# -----------------------------
 else:
-    # 現在の問題
     current_question = questions[st.session_state.question_index]
 
     st.write(
         f"問題 {st.session_state.question_index + 1} "
         f"/ {len(questions)}"
     )
+
     st.write(f"現在の正解数：{st.session_state.score}")
 
     st.progress(
