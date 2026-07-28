@@ -42,6 +42,9 @@ if "answered" not in st.session_state:
 if "selected_answer" not in st.session_state:
     st.session_state.selected_answer = None
 
+if "mistakes" not in st.session_state:
+    st.session_state.mistakes = []
+
 
 questions = st.session_state.questions
 
@@ -75,6 +78,30 @@ if st.session_state.question_index >= len(questions):
     else:
         st.write("間違えた問題をもう一度確認してみましょう。")
 
+    # 間違えた問題の一覧
+    if st.session_state.mistakes:
+        st.divider()
+        st.subheader("📝 間違えた問題")
+
+        for number, mistake in enumerate(
+            st.session_state.mistakes,
+            start=1,
+        ):
+            with st.expander(
+                f"間違い {number}：{mistake['question']}"
+            ):
+                st.write(
+                    f"あなたの答え："
+                    f"{mistake['selected_answer']}"
+                )
+                st.write(
+                    f"正解：{mistake['correct_answer']}"
+                )
+                st.info(mistake["explanation"])
+
+    else:
+        st.success("間違えた問題はありません！")
+
     if st.button("もう一度挑戦する"):
         st.session_state.questions = random.sample(
             original_questions,
@@ -84,6 +111,7 @@ if st.session_state.question_index >= len(questions):
         st.session_state.score = 0
         st.session_state.answered = False
         st.session_state.selected_answer = None
+        st.session_state.mistakes = []
         st.rerun()
 
 
@@ -124,6 +152,21 @@ else:
 
                 if selected == current_question["answer"]:
                     st.session_state.score += 1
+                else:
+                    st.session_state.mistakes.append(
+                        {
+                            "question": current_question[
+                                "question"
+                            ],
+                            "selected_answer": selected,
+                            "correct_answer": current_question[
+                                "answer"
+                            ],
+                            "explanation": current_question[
+                                "explanation"
+                            ],
+                        }
+                    )
 
                 st.rerun()
 
