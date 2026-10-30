@@ -321,9 +321,26 @@ st.subheader("📘 高校受験トレーニング")
 # 分野選択画面
 # --------------------------------
 if not st.session_state.get("quiz_started", False):
-    st.write(
-        "挑戦する分野を選んでください。"
-        "各分野100問から毎回10問を出題します。"
+
+    question_counts = {
+        category: len([
+            question
+            for question in all_questions
+            if question["category"] == category
+        ])
+        for category in categories
+    }
+
+    st.write("挑戦する分野を選んでください。")
+
+    st.caption(
+        f"🌏 地理 {question_counts['地理']}問　"
+        f"🏯 歴史 {question_counts['歴史']}問　"
+        f"⚖️ 公民 {question_counts['公民']}問"
+    )
+
+    st.caption(
+        f"選んだ分野から毎回{QUESTIONS_PER_SESSION}問をランダムに出題します。"
     )
 
     category = st.radio(
